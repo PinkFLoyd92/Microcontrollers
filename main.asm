@@ -18,7 +18,7 @@
 	org		0x00		; vector de reset
 	goto	main			; salto a "main"
 	org		0x04        	; vector de interrupción  
-	goto	INTERRUPCION 		; salto a interrupción
+	goto	INTERRUPT 		; salto a interrupción
 	org		0x05  		; continuación de programa
 
 ;************************ MAIN PROGRAM *************************
@@ -26,42 +26,15 @@
 ;***************************************************************
 ;SETEO DE PUERTOS Y REGISTROS       	
 
-main  
-	banksel	TRISA		;Selects bank containing register TRISA
-	clrf	TRISA		;All port A pins are configured as outputs                 
-	clrf	TRISC		;All port c pins are configured as outputs                 
-	clrf	TRISD		;All port d pins are configured as outputs                 
-	clrf	TRISE		;All port e pins are configured as outputs                 
-	movlw	b'00011111'
-	movwf	TRISB		;RB5 ,RB6 y RB7 configured as outputs        
+main
 	banksel	ANSEL		;Bank containing register ANSEL
 	clrf	ANSEL		;Clears registers ANSEL and ANSELH
 	clrf	ANSELH		;All pins are digital
-
-;*********seteo_todas_la_salidas********************************	
-	banksel	PORTA
-	clrf	PORTA
-	clrf	PORTC
-	clrf	PORTD
-	clrf	PORTE
-	clrf	PORTB	
+        call banda1_puertos
 
 	;; TIMER0 USADO PARA CREAR TEMPORIZACION DE 5 SEGUNDOS
 ;*********temporizacion_timers**********************************
-
-	BANKSEL TMR0 ;
-	CLRWDT 			;Clear WDT
-	CLRF TMR0 		;Clear TMR0 
-	BANKSEL OPTION_REG 	;Seleccionar registro option_reg
-	BSF OPTION_REG,PSA ;Select WDT
-	BSF OPTION_REG,TOCS ;RA4 tocki pin
-	CLRF TMR0 		;Clear TMR0 
-
-;;****************INTERRUPCION*******************************
-INTERRUPCION
-	
-	retfie	
-
+	call banda1_contarProductos
 
 ;;------------MAIN******************************************** 
 	lazo
@@ -84,3 +57,21 @@ tabla
 		RETLW	0x07		; Retorna con el código del 7
 		RETLW	0x7F		; Retorna con el código del 8
 		RETLW	0x67		; Retorna con el código del 9
+
+
+;;; ***********************BANDA 1********************************
+banda1_puertos
+	banksel trisc
+	clrf trisc		; salidas en el puerto c
+	banksel PORTC
+	clrf portc
+	return
+
+banda1_contarProductos
+	banksel TMR0
+	clrf TMR0
+	clrf WDT
+	BANKSEL OPTION_REG
+	bsf OPTION_REG,PSA	;asignacion de preescalados a wdt
+	BSF OPTION_REG,TOCS ;RA4 tocki pin
+return
