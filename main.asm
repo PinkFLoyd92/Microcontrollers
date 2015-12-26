@@ -11,7 +11,10 @@
 	counter_tmr0
 	unidades	;registro de unidades
 	uni_cod	;Código de 7 segmentos de unidades
-
+	contador
+	decenas
+	sel
+	dec_cod
 	ENDC
 	;************************START OF PROGRAM ***********************			     ; forma de iniciar programa que usa interrupciones	
 	
@@ -26,19 +29,25 @@
 ;***************************************************************
 ;SETEO DE PUERTOS Y REGISTROS       	
 
+INTERRUPT
+	goto banda1_interrupcion
 main
 	banksel	ANSEL		;Bank containing register ANSEL
 	clrf	ANSEL		;Clears registers ANSEL and ANSELH
 	clrf	ANSELH		;All pins are digital
-        call banda1_puertos
+	clrf	sel
+	CLRF	contador
+	CLRF	unidades
+	CLRF	decenas
 
-	;; TIMER0 USADO PARA CREAR TEMPORIZACION DE 5 SEGUNDOS
-;*********temporizacion_timers**********************************
+        call banda1_puertos
+	call habilitarInterrupciones
+	;; TIMER0 USADO COMO TEMPORIZADOR PARA CONTAR
 	call banda1_contarProductos
+
 
 ;;------------MAIN******************************************** 
 	lazo
-		nop
 		goto lazo
 	
 ;;****************Tabla - *******************************
@@ -58,20 +67,92 @@ tabla
 		RETLW	0x7F		; Retorna con el código del 8
 		RETLW	0x67		; Retorna con el código del 9
 
+	;**********************HABILITAR INTERRUPCIONES*********************
+habilitarInterrupciones
+	banksel	INTCON
+	clrf	INTCON			;habilita interrupción
+	bsf		INTCON,GIE		;GIE=1 (BIT 7)
+					; habilita interrupciones globales
+	bsf		INTCON,INTE		;INTE=1 (BIT 4)
+					; habilita interrupciones por señal INT
+	bsf		INTCON,T0IE		;T0IE01	(BIT 5)
+					; habilita interrupciones por desvordamiento de TMR0
+	movlw	.100			;Cantidad de interrupciones a contar
+	movwf	contador		;Nº de veces a repetir la interrupción
+	return
+	
 
 ;;; ***********************BANDA 1********************************
 banda1_puertos
-	banksel trisc
-	clrf trisc		; salidas en el puerto c
+	banksel TRISC
+	clrf TRISC		; salidas en el puerto c
+	banksel TRISB
+	movlw 	b'00111111'
+	movwf	TRISB		;PORTB COMO ENTRADAS excepto pin 6 y 7	
+	
 	banksel PORTC
-	clrf portc
+	clrf PORTC
 	return
 
 banda1_contarProductos
-	banksel TMR0
+	BANKSEL TMR0
 	clrf TMR0
-	clrf WDT
 	BANKSEL OPTION_REG
-	bsf OPTION_REG,PSA	;asignacion de preescalados a wdt
-	BSF OPTION_REG,TOCS ;RA4 tocki pin
-return
+	movlw		b'00000111'	;TMR0 como temporizador
+	movwf		OPTION_REG  	;con preescaler de 256 
+	BANKSEL	TMR0		;Selecciona el Bank0
+	movlw		.217		;Valor decimal 217	
+	movwf		TMR0		;Carga el TMR0 con 217
+	return
+
+banda1_interrupcion
+	;; *********************CONTANDO PRODUCTOS EN BANDA 1************************
+	movf	sel,w		;Se mueve a si mismo para afectar bandera
+	btfss	STATUS,2	;sel=0 refresca dig1; sel=1 refresca dig2
+	goto	dig2
+	dig1	 	
+		movf	unidades,w  
+		call	tabla
+		movwf	uni_cod
+		movf 	uni_cod,w
+		bsf	PORTB,6
+		bsf	PORTB,7
+		movwf	PORTC
+		bcf	PORTB,6
+		comf	sel,f
+		goto 	dec
+	dig2	
+		movf	decenas,w  
+		call		tabla
+		movwf	dec_cod
+		movf 	dec_cod,w
+		bsf	PORTB,6
+		bsf	PORTB,7
+		movwf	PORTC
+		bcf	PORTB,7
+		comf	sel,f	
+	dec
+		decfsz 	contador,f		;cuenta espacios de 10ms
+		goto	Seguir			;Aún, no son 100 interrupciones
+		INCF 	unidades,f		;Ahora sí 10x100=1000ms=1seg
+		movlw	.10
+		subwf	unidades,w
+		btfss	STATUS,2
+		goto	cont
+		clrf	unidades
+		incf	decenas
+		movlw	.10
+		subwf	decenas,w
+		btfss	STATUS,2
+		goto	cont
+		clrf	decenas
+	cont
+	 	movlw 	.100		
+       	movwf 	contador   		;Carga contador con 100
+	Seguir   
+		bcf	INTCON,T0IF		;Repone flag del TMR0 
+		movlw 	~.39
+       	movwf 	TMR0      		;Repone el TMR0 con ~.39
+	retfie
+
+end
