@@ -1,4 +1,4 @@
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  1
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -10,250 +10,69 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00002 ; P16F887.INC  Standard Header File, Version 1.00    Microchip Technology, Inc.
                       00617         LIST
                       00003                                         ;P16F88
-2007   3FF1           00004         __CONFIG _CONFIG1, _CP_OFF&_WDT_OFF&_XT_OSC     
-                      00005                                         ;Setea parámetros de 
-                      00006                                         ;configuración
-                      00007 
-                      00008         errorlevel       -302           ;Deshabilita mensajes de 
-                      00009                                         ;advertencia por cambio bancos
-                      00010         CBLOCK          0X020
-  00000020            00011         counter_tmr0
-  00000021            00012         counter1
-  00000022            00013         counter2
-  00000023            00014         unidades        ;registro de unidades
-  00000024            00015         uni_cod ;Código de 7 segmentos de unidades
-  00000025            00016         contador
-  00000026            00017         decenas
-  00000027            00018         sel
-  00000028            00019         dec_cod
-                      00020         ENDC
-                      00021         ;************************START OF PROGRAM ***********************                            ; f
-                            orma de iniciar programa que usa interrupciones 
-                      00022         
-0000                  00023         org             0x00            ; vector de reset
-0000   2806           00024         goto    main                    ; salto a "main"
-0004                  00025         org             0x04            ; vector de interrupción  
-0004   2805           00026         goto    INTERRUPT               ; salto a interrupción
-0005                  00027         org             0x05            ; continuación de programa
-                      00028 
-                      00029 ;************************ MAIN PROGRAM *************************
-                      00030 ; inicio de programa principal
-                      00031 ;***************************************************************
-                      00032 ;SETEO DE PUERTOS Y REGISTROS           
-                      00033 
-0005                  00034 INTERRUPT
-                      00035         ;; btfss INTCON INTF
-0005   285B           00036         goto banda1_interrupcion
-                      00037         ;; goto banda2_interrupcion
-0006                  00038 main
-0006   1683 1703      00039         banksel ANSEL           ;Bank containing register ANSEL
-0008   0188           00040         clrf    ANSEL           ;Clears registers ANSEL and ANSELH
-0009   0189           00041         clrf    ANSELH          ;All pins are digital
-000A   01A7           00042         clrf    sel
-000B   01A5           00043         CLRF    contador
-000C   01A3           00044         CLRF    unidades
-000D   01A6           00045         CLRF    decenas
-                      00046 
-000E   2035           00047         call banda1_puertos
-000F   202D           00048         call habilitarInterrupciones
-                      00049         ;; TIMER0 USADO COMO TEMPORIZADOR PARA CONTAR
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  2
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-0010   2043           00050         call banda1_contarProductos
-                      00051 
-                      00052 
-                      00053 ;;------------MAIN******************************************** 
+2007   3FF1           00004         __CONFIG _CONFIG1, _CP_OFF&_WDT_OFF&_XT_OSC             
+                      00005         errorlevel       -302           ;Deshabilita mensajes de 
+                      00006                                         ;advertencia por cambio bancos
+                      00007         CBLOCK          0X020
+  00000020            00008         counter
+  00000021            00009         counter2
+  00000022            00010         counter1
+                      00011         endc
+Warning[205]: Found directive in column 1. (Org)
+0000                  00012 Org             0x00            ; vector de reset
+Warning[203]: Found opcode in column 1. (Goto)
+0000   2801           00013 Goto    main            ; salto a "main"
+0001                  00014 main
+0001   1683 1703      00015         banksel ANSEL           ;Bank containing register ANSEL
+0003   0188           00016         clrf    ANSEL           ;Clears registers ANSEL and ANSELH
+0004   0189           00017         clrf    ANSELH          ;All pins are digital
+0005   1683 1303      00018         banksel TRISC
+0007   0187           00019         clrf TRISC              ; salidas en el puerto c
+0008   1683 1303      00020         banksel TRISB
+000A   303F           00021         movlw   b'00111111'
+000B   0086           00022         movwf   TRISB           ;PORTB COMO ENTRADAS excepto pin 6 y 7  
+000C   1283 1303      00023         banksel PORTC
+000E   0187           00024         clrf PORTC
+                      00025         ;; *****************************************MAIN*****************************
 Warning[207]: Found label after column 1. (lazo)
-0011                  00054         lazo
-0011   2013           00055         call banda2_iniciar
-0012   2811           00056         goto lazo
-                      00057 
-                      00058 
-                      00059 ;;****************************funciones************************
-0013                  00060 banda2_iniciar
-0013   1A86           00061         btfsc PORTB,5
-0014   2816           00062         goto seguir
-0015   204F           00063         call banda2_decrementarProducto
-0016                  00064 seguir
-0016   0008           00065         return  
-                      00066 ;;****************DELAY - *******************************
-0017                  00067 DELAY
-0017   01A2           00068        clrf        counter2        ; Clears variable "counter2"
-0018                  00069 loop1
-0018   01A1           00070        clrf        counter1        ; Clears variable "counter1"
-0019                  00071 loop2
-Message[305]: Using default destination of 1 (file).
-0019   0BA1           00072        decfsz      counter1        ; Decrements variable "counter1" by 1
-001A   2819           00073        goto        loop2           ; Result is not 0. Go to label loop2
-Message[305]: Using default destination of 1 (file).
-001B   0BA2           00074        decfsz      counter2        ; Decrements variable "counter2" by 1
-001C   2818           00075        goto        loop1           ; Result is not 0. Go to lab loop1
-001D   0008           00076        return                      ; Return from subroutine "DELAY"
-                      00077 
-001E                  00078 DELAY2
-001E   2017           00079         call DELAY
-001F   2017           00080         call DELAY
-0020   2017           00081         CALL DELAY
-Warning[203]: Found opcode in column 1. (return)
-0021   0008           00082 return
-                      00083 ;;****************Tabla - *******************************
-0022                  00084 tabla
-0022   0782           00085         ADDWF   PCL,F           ; PCL + W -> PCL
-                      00086                                                 ; El PCL se incrementa con el 
-                      00087                                                 ; valor de W proporcionando un 
-                      00088                                                 ; salto
-0023   343F           00089         RETLW   0x3F            ; Retorna con el código del 0
-0024   3406           00090                 RETLW   0x06            ; Retorna con el código del 1
-0025   345B           00091                 RETLW   0x5B            ; Retorna con el código del 2
-0026   344F           00092                 RETLW   0x4F            ; Retorna con el código del 3
-0027   3466           00093                 RETLW   0x66            ; Retorna con el código del 4
-0028   346D           00094                 RETLW   0x6D            ; Retorna con el código del 5
-0029   347D           00095                 RETLW   0x7D            ; Retorna con el código del 6
-002A   3407           00096                 RETLW   0x07            ; Retorna con el código del 7
-002B   347F           00097                 RETLW   0x7F            ; Retorna con el código del 8
-002C   3467           00098                 RETLW   0x67            ; Retorna con el código del 9
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  3
+000F                  00026                 lazo
+000F   2011           00027         call banda2_llenarCaja
+0010   280F           00028         goto lazo
+                      00029 
+Warning[207]: Found label after column 1. (banda2_llenarCaja)
+0011                  00030         banda2_llenarCaja
+0011   201A           00031         CALL DELAY
+0012   1283 1303      00032         banksel PORTB
+0014   1C86           00033         btfss PORTB,1
+0015   2818           00034         goto seguir
+0016   1507           00035         bsf PORTC,2
+0017   0008           00036         return
+0018                  00037 seguir
+0018   1107           00038         bcf PORTC,2
+0019   0008           00039         return
+                      00040 
+                      00041 
+001A                  00042 DELAY
+001A   01A1           00043        clrf        counter2        ; Clears variable "counter2"
+001B                  00044 loop1
+001B   01A2           00045        clrf        counter1        ; Clears variable "counter1"
+001C                  00046 loop2
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00099 
-                      00100         ;**********************HABILITAR INTERRUPCIONES*********************
-002D                  00101 habilitarInterrupciones
-002D   1283 1303      00102         banksel INTCON
-002F   018B           00103         clrf    INTCON                  ;habilita interrupción
-0030   178B           00104         bsf             INTCON,GIE              ;GIE=1 (BIT 7)
-                      00105                                         ; habilita interrupciones globales
-                      00106         ;; bsf          INTCON,INTE             ;INTE=1 (BIT 4)
-                      00107                                         ; habilita interrupciones por señal INT
-0031   168B           00108         bsf             INTCON,T0IE             ;T0IE01 (BIT 5)
-                      00109                                         ; habilita interrupciones por desbordamiento de TMR0
-0032   3064           00110         movlw   .100                    ;Cantidad de interrupciones a contar
-0033   00A5           00111         movwf   contador                ;Nº de veces a repetir la interrupción
-0034   0008           00112         return
-                      00113         
-                      00114 
-                      00115 ;;; ***********************BANDA 1********************************
-0035                  00116 banda1_puertos
-0035   1683 1303      00117         banksel TRISC
-0037   0187           00118         clrf TRISC              ; salidas en el puerto c
-0038   1683 1303      00119         banksel TRISB
-003A   303F           00120         movlw   b'00111111'
-003B   0086           00121         movwf   TRISB           ;PORTB COMO ENTRADAS excepto pin 6 y 7
-003C   1283 1303      00122         banksel PORTB
-003E   0186           00123         CLRF    PORTB
-003F   1283 1303      00124         banksel PORTC
-0041   0187           00125         clrf PORTC
-0042   0008           00126         return
-                      00127 
-0043                  00128 banda1_contarProductos
-0043   1283 1303      00129         BANKSEL TMR0
-0045   0181           00130         clrf TMR0
-0046   1683 1303      00131         BANKSEL OPTION_REG
-0048   3007           00132         movlw           b'00000111'     ;TMR0 como temporizador
-0049   0081           00133         movwf           OPTION_REG      ;con preescaler de 256 
-004A   1283 1303      00134         BANKSEL TMR0            ;Selecciona el Bank0
-004C   30D9           00135         movlw           .217            ;Valor decimal 217      
-004D   0081           00136         movwf           TMR0            ;Carga el TMR0 con 217
-004E   0008           00137         return
-                      00138 
-004F                  00139 banda2_decrementarProducto
-004F   201E           00140                 call DELAY2
-0050   1023           00141                 bcf     unidades,0
-0051   0823           00142                 movf    unidades,w  
-0052   2022           00143                 call    tabla
-0053   00A4           00144                 movwf   uni_cod
-0054   0824           00145                 movf    uni_cod,w
-0055   1706           00146                 bsf     PORTB,6
-0056   1786           00147                 bsf     PORTB,7
-0057   0087           00148                 movwf   PORTC
-0058   1306           00149                 bcf     PORTB,6
-0059   09A7           00150                 comf    sel,f
-005A   0008           00151         return
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  4
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-                      00152 
-                      00153 
-                      00154         ;; ****************************************INTERRUPCIONES***************************************
-                            **
-                      00155 ;; banda2_interrupcion
-                      00156         ;; call banda2_decrementarProducto
-                      00157         ;; bcf INTCON,INTF
-                      00158         ;; retfie
-005B                  00159 banda1_interrupcion
-                      00160         ;; *********************CONTANDO PRODUCTOS EN BANDA 1************************
-005B   0827           00161         movf    sel,w           ;Se mueve a si mismo para afectar bandera
-005C   1D03           00162         btfss   STATUS,2        ;sel=0 refresca dig1; sel=1 refresca dig2
-005D   2868           00163         goto    dig2
-Warning[207]: Found label after column 1. (dig1)
-005E                  00164         dig1            
-005E   0823           00165                 movf    unidades,w  
-005F   2022           00166                 call    tabla
-0060   00A4           00167                 movwf   uni_cod
-0061   0824           00168                 movf    uni_cod,w
-0062   1706           00169                 bsf     PORTB,6
-0063   1786           00170                 bsf     PORTB,7
-0064   0087           00171                 movwf   PORTC
-0065   1306           00172                 bcf     PORTB,6
-0066   09A7           00173                 comf    sel,f
-0067   2871           00174                 goto    dec
-Warning[207]: Found label after column 1. (dig2)
-0068                  00175         dig2    
-0068   0826           00176                 movf    decenas,w  
-0069   2022           00177                 call            tabla
-006A   00A8           00178                 movwf   dec_cod
-006B   0828           00179                 movf    dec_cod,w
-006C   1706           00180                 bsf     PORTB,6
-006D   1786           00181                 bsf     PORTB,7
-006E   0087           00182                 movwf   PORTC
-006F   1386           00183                 bcf     PORTB,7
-0070   09A7           00184                 comf    sel,f   
-Warning[207]: Found label after column 1. (dec)
-0071                  00185         dec
-0071   0BA5           00186                 decfsz  contador,f              ;cuenta espacios de 10ms
-0072   2881           00187                 goto    Seguir                  ;Aún, no son 100 interrupciones
-0073   0AA3           00188                 INCF    unidades,f              ;Ahora sí 10x100=1000ms=1seg
-0074   300A           00189                 movlw   .10
-0075   0223           00190                 subwf   unidades,w
-0076   1D03           00191                 btfss   STATUS,2
-0077   287F           00192                 goto    cont
-0078   01A3           00193                 clrf    unidades
 Message[305]: Using default destination of 1 (file).
-0079   0AA6           00194                 incf    decenas
-007A   300A           00195                 movlw   .10
-007B   0226           00196                 subwf   decenas,w
-007C   1D03           00197                 btfss   STATUS,2
-007D   287F           00198                 goto    cont
-007E   01A6           00199                 clrf    decenas
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  5
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-Warning[207]: Found label after column 1. (cont)
-007F                  00200         cont
-007F   3064           00201                 movlw   .100            
-0080   00A5           00202         movwf   contador                ;Carga contador con 100
-Warning[207]: Found label after column 1. (Seguir)
-0081                  00203         Seguir   
-0081   110B           00204                 bcf     INTCON,T0IF             ;Repone flag del TMR0 
-0082   30D8           00205                 movlw   ~.39
-0083   0081           00206         movwf   TMR0                    ;Repone el TMR0 con ~.39
-0084   0009           00207         retfie
-                      00208 
+001C   0BA2           00047        decfsz      counter1        ; Decrements variable "counter1" by 1
+001D   281C           00048        goto        loop2           ; Result is not 0. Go to label loop2
+Message[305]: Using default destination of 1 (file).
+001E   0BA1           00049        decfsz      counter2        ; Decrements variable "counter2" by 1
+001F   281B           00050        goto        loop1           ; Result is not 0. Go to lab loop1
+0020   0008           00051        return                      ; Return from subroutine "DELAY"
 Warning[205]: Found directive in column 1. (end)
-                      00209 end
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  6
+                      00052 end
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  3
 
 
 SYMBOL TABLE
@@ -312,7 +131,7 @@ BRG6                              00000006
 BRG7                              00000007
 BRG8                              00000000
 BRG9                              00000001
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  7
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  4
 
 
 SYMBOL TABLE
@@ -371,7 +190,7 @@ CHS2                              00000004
 CHS3                              00000005
 CKE                               00000006
 CKP                               00000004
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  8
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  5
 
 
 SYMBOL TABLE
@@ -389,8 +208,7 @@ DC1B0                             00000004
 DC1B1                             00000005
 DC2B0                             00000004
 DC2B1                             00000005
-DELAY                             00000017
-DELAY2                            0000001E
+DELAY                             0000001A
 D_A                               00000005
 ECCPAS                            0000009C
 ECCPAS0                           00000004
@@ -424,20 +242,19 @@ INDF                              00000000
 INTCON                            0000000B
 INTE                              00000004
 INTEDG                            00000006
-INTERRUPT                         00000005
 INTF                              00000001
 IOCB                              00000096
 IOCB0                             00000000
 IOCB1                             00000001
 IOCB2                             00000002
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE  9
+IOCB3                             00000003
+IOCB4                             00000004
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  6
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-IOCB3                             00000003
-IOCB4                             00000004
 IOCB5                             00000005
 IOCB6                             00000006
 IOCB7                             00000007
@@ -489,14 +306,14 @@ PIE1                              0000008C
 PIE2                              0000008D
 PIR1                              0000000C
 PIR2                              0000000D
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE 10
+PORTA                             00000005
+PORTB                             00000006
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  7
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-PORTA                             00000005
-PORTB                             00000006
 PORTC                             00000007
 PORTD                             00000008
 PORTE                             00000009
@@ -548,14 +365,14 @@ SR0                               00000006
 SR1                               00000007
 SRCON                             00000185
 SREN                              00000005
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE 11
+SSPADD                            00000093
+SSPBUF                            00000013
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  8
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-SSPADD                            00000093
-SSPBUF                            00000013
 SSPCON                            00000014
 SSPCON2                           00000091
 SSPEN                             00000005
@@ -576,7 +393,6 @@ STRD                              00000003
 STRSYNC                           00000004
 SWDTEN                            00000000
 SYNC                              00000004
-Seguir                            00000081
 T0CS                              00000005
 T0IE                              00000005
 T0IF                              00000002
@@ -607,15 +423,15 @@ TMR2IE                            00000001
 TMR2IF                            00000001
 TMR2ON                            00000002
 TOUTPS0                           00000003
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE 12
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE  9
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-TOUTPS1                           00000004
-TOUTPS2                           00000005
-TOUTPS3                           00000006
 TRISA                             00000085
 TRISB                             00000086
 TRISC                             00000087
@@ -666,15 +482,15 @@ WPUB3                             00000003
 WPUB4                             00000004
 WPUB5                             00000005
 WPUB6                             00000006
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE 13
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE 10
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-WPUB7                             00000007
-WR                                00000001
-WREN                              00000002
 WRERR                             00000003
 WUE                               00000001
 Z                                 00000002
@@ -722,54 +538,36 @@ _WRT_OFF                          00003FFF
 _XT_OSC                           00003FF9
 __16F887                          00000001
 __DEBUG                           1
-banda1_contarProductos            00000043
-banda1_interrupcion               0000005B
-banda1_puertos                    00000035
-MPASM  5.22                          MAIN.ASM   12-26-2015  15:59:13         PAGE 14
+banda2_llenarCaja                 00000011
+counter                           00000020
+counter1                          00000022
+counter2                          00000021
+lazo                              0000000F
+loop1                             0000001B
+MPASM  5.22                         MAIN2.ASM   12-26-2015  15:16:58         PAGE 11
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
-banda2_decrementarProducto        0000004F
-banda2_iniciar                    00000013
-cont                              0000007F
-contador                          00000025
-counter1                          00000021
-counter2                          00000022
-counter_tmr0                      00000020
-dec                               00000071
-dec_cod                           00000028
-decenas                           00000026
-dig1                              0000005E
-dig2                              00000068
-habilitarInterrupciones           0000002D
-lazo                              00000011
-loop1                             00000018
-loop2                             00000019
-main                              00000006
-seguir                            00000016
-sel                               00000027
-tabla                             00000022
-uni_cod                           00000024
-unidades                          00000023
+loop2                             0000001C
+main                              00000001
+seguir                            00000018
 
 
 MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
 
-0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
-0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
-0080 : XXXXX----------- ---------------- ---------------- ----------------
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX X--------------- ----------------
 2000 : -------X-------- ---------------- ---------------- ----------------
 
 All other memory blocks unused.
 
-Program Memory Words Used:   130
-Program Memory Words Free:  8062
+Program Memory Words Used:    33
+Program Memory Words Free:  8159
 
 
 Errors   :     0
-Warnings :     8 reported,     0 suppressed
-Messages :     3 reported,     5 suppressed
+Warnings :     5 reported,     0 suppressed
+Messages :     2 reported,     4 suppressed
 
 

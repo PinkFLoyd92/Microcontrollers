@@ -9,6 +9,8 @@
 					;advertencia por cambio bancos
 	CBLOCK		0X020
 	counter_tmr0
+	counter1
+	counter2
 	unidades	;registro de unidades
 	uni_cod	;Código de 7 segmentos de unidades
 	contador
@@ -30,7 +32,9 @@
 ;SETEO DE PUERTOS Y REGISTROS       	
 
 INTERRUPT
+	;; btfss INTCON INTF
 	goto banda1_interrupcion
+	;; goto banda2_interrupcion
 main
 	banksel	ANSEL		;Bank containing register ANSEL
 	clrf	ANSEL		;Clears registers ANSEL and ANSELH
@@ -48,8 +52,34 @@ main
 
 ;;------------MAIN******************************************** 
 	lazo
-		goto lazo
-	
+	call banda2_iniciar
+	goto lazo
+
+
+;;****************************funciones************************
+banda2_iniciar
+	btfsc PORTB,5
+	goto seguir
+	call banda2_decrementarProducto
+seguir
+	return	
+;;****************DELAY - *******************************
+DELAY
+       clrf        counter2        ; Clears variable "counter2"
+loop1
+       clrf        counter1        ; Clears variable "counter1"
+loop2
+       decfsz      counter1        ; Decrements variable "counter1" by 1
+       goto        loop2           ; Result is not 0. Go to label loop2
+       decfsz      counter2        ; Decrements variable "counter2" by 1
+       goto        loop1           ; Result is not 0. Go to lab loop1
+       return                      ; Return from subroutine "DELAY"
+
+DELAY2
+	call DELAY
+	call DELAY
+	CALL DELAY
+return
 ;;****************Tabla - *******************************
 tabla
         ADDWF   PCL,F       	; PCL + W -> PCL
@@ -73,10 +103,10 @@ habilitarInterrupciones
 	clrf	INTCON			;habilita interrupción
 	bsf		INTCON,GIE		;GIE=1 (BIT 7)
 					; habilita interrupciones globales
-	bsf		INTCON,INTE		;INTE=1 (BIT 4)
+	;; bsf		INTCON,INTE		;INTE=1 (BIT 4)
 					; habilita interrupciones por señal INT
 	bsf		INTCON,T0IE		;T0IE01	(BIT 5)
-					; habilita interrupciones por desvordamiento de TMR0
+					; habilita interrupciones por desbordamiento de TMR0
 	movlw	.100			;Cantidad de interrupciones a contar
 	movwf	contador		;Nº de veces a repetir la interrupción
 	return
@@ -88,8 +118,9 @@ banda1_puertos
 	clrf TRISC		; salidas en el puerto c
 	banksel TRISB
 	movlw 	b'00111111'
-	movwf	TRISB		;PORTB COMO ENTRADAS excepto pin 6 y 7	
-	
+	movwf	TRISB		;PORTB COMO ENTRADAS excepto pin 6 y 7
+	banksel PORTB
+	CLRF	PORTB
 	banksel PORTC
 	clrf PORTC
 	return
@@ -105,6 +136,26 @@ banda1_contarProductos
 	movwf		TMR0		;Carga el TMR0 con 217
 	return
 
+banda2_decrementarProducto
+		call DELAY2
+		bcf	unidades,0
+		movf	unidades,w  
+		call	tabla
+		movwf	uni_cod
+		movf 	uni_cod,w
+		bsf	PORTB,6
+		bsf	PORTB,7
+		movwf	PORTC
+		bcf	PORTB,6
+		comf	sel,f
+	return
+
+
+	;; ****************************************INTERRUPCIONES*****************************************
+;; banda2_interrupcion
+	;; call banda2_decrementarProducto
+	;; bcf INTCON,INTF
+	;; retfie
 banda1_interrupcion
 	;; *********************CONTANDO PRODUCTOS EN BANDA 1************************
 	movf	sel,w		;Se mueve a si mismo para afectar bandera

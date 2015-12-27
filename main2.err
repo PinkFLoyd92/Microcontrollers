@@ -1,0 +1,7 @@
+Warning[205] E:\MICROCONTROLLERS\MAIN2.ASM 12 : Found directive in column 1. (Org)
+Warning[203] E:\MICROCONTROLLERS\MAIN2.ASM 13 : Found opcode in column 1. (Goto)
+Warning[207] E:\MICROCONTROLLERS\MAIN2.ASM 26 : Found label after column 1. (lazo)
+Warning[207] E:\MICROCONTROLLERS\MAIN2.ASM 30 : Found label after column 1. (banda2_llenarCaja)
+Message[305] E:\MICROCONTROLLERS\MAIN2.ASM 47 : Using default destination of 1 (file).
+Message[305] E:\MICROCONTROLLERS\MAIN2.ASM 49 : Using default destination of 1 (file).
+Warning[205] E:\MICROCONTROLLERS\MAIN2.ASM 52 : Found directive in column 1. (end)
