@@ -2,10 +2,10 @@ Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 54 : Found label after column 1. (lazo
 Message[305] E:\MICROCONTROLLERS\MAIN.ASM 72 : Using default destination of 1 (file).
 Message[305] E:\MICROCONTROLLERS\MAIN.ASM 74 : Using default destination of 1 (file).
 Warning[203] E:\MICROCONTROLLERS\MAIN.ASM 82 : Found opcode in column 1. (return)
-Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 164 : Found label after column 1. (dig1)
-Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 175 : Found label after column 1. (dig2)
-Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 185 : Found label after column 1. (dec)
-Message[305] E:\MICROCONTROLLERS\MAIN.ASM 194 : Using default destination of 1 (file).
-Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 200 : Found label after column 1. (cont)
-Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 203 : Found label after column 1. (Seguir)
-Warning[205] E:\MICROCONTROLLERS\MAIN.ASM 209 : Found directive in column 1. (end)
+Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 165 : Found label after column 1. (dig1)
+Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 176 : Found label after column 1. (dig2)
+Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 186 : Found label after column 1. (dec)
+Message[305] E:\MICROCONTROLLERS\MAIN.ASM 195 : Using default destination of 1 (file).
+Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 201 : Found label after column 1. (cont)
+Warning[207] E:\MICROCONTROLLERS\MAIN.ASM 204 : Found label after column 1. (Seguir)
+Warning[205] E:\MICROCONTROLLERS\MAIN.ASM 210 : Found directive in column 1. (end)

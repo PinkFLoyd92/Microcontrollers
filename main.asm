@@ -82,6 +82,7 @@ DELAY2
 return
 ;;****************Tabla - *******************************
 tabla
+	
         ADDWF   PCL,F       	; PCL + W -> PCL
 						; El PCL se incrementa con el 
 						; valor de W proporcionando un 
